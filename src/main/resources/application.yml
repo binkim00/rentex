@@ -16,6 +16,12 @@ spring:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.MariaDBDialect
+    defer-datasource-initialization: true  # SQL 초기화 스크립트 실행 허용
+
+  sql:
+    init:
+      mode: always  # ✅ 서버 실행 시마다 SQL 실행
+      schema-locations: classpath:init/rentex.sql  # 커스텀 초기 스크립트 위치
 
 server:
   port: 8080
