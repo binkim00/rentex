@@ -1,8 +1,8 @@
 package com.rentex.rental.domain;
 
+import com.rentex.global.domain.BaseTimeEntity;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
 
@@ -11,22 +11,40 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class RentalHistory {
+public class RentalHistory extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "rental_id", nullable = false)
     private Rental rental;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Rental.RentalStatus status;
+    private RentalStatus fromStatus;
 
-    @CreationTimestamp
+    @Enumerated(EnumType.STRING)
+    private RentalStatus toStatus;
+
+    @Enumerated(EnumType.STRING)
+    private ActionActor actor;
+
+    private String description;
+
     private LocalDateTime changedAt;
 
-    private String memo;
+    @PrePersist
+    public void prePersist() {
+        this.changedAt = LocalDateTime.now();
+    }
+
+    public static RentalHistory of(Rental rental, RentalStatus from, RentalStatus to, ActionActor actor, String desc) {
+        return RentalHistory.builder()
+                .rental(rental)
+                .fromStatus(from)
+                .toStatus(to)
+                .actor(actor)
+                .description(desc)
+                .build();
+    }
 }

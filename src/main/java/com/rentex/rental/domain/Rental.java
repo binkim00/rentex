@@ -1,11 +1,10 @@
 package com.rentex.rental.domain;
 
+import com.rentex.global.domain.BaseTimeEntity;
 import com.rentex.item.domain.Item;
 import com.rentex.user.domain.User;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -15,39 +14,39 @@ import java.time.LocalDateTime;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-public class Rental {
+public class Rental extends BaseTimeEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "item_id", nullable = false)
     private Item item;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private RentalStatus status;
+
+    private int quantity;
 
     private LocalDate startDate;
     private LocalDate endDate;
-    private LocalDate actualReturnDate;
 
-    @CreationTimestamp
-    private LocalDateTime createdAt;
+    private LocalDateTime rentedAt;
+    private LocalDateTime returnedAt;
 
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
+    private boolean receivedByPartner;
+    private LocalDateTime partnerReceivedAt;
 
-    public enum RentalStatus {
-        REQUESTED,
-        APPROVED,
-        RENTED,
-        RETURN_REQUESTED,
-        RETURNED
+    private boolean returnCheckedByPartner;
+    private LocalDateTime partnerReturnCheckedAt;
+
+    @PrePersist
+    public void prePersist() {
+        if (this.status == null) {
+            this.status = RentalStatus.REQUESTED;
+        }
     }
 }
