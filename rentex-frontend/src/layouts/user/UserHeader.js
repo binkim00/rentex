@@ -10,6 +10,7 @@ import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDAvatar from "components/MDAvatar";
 import MDButton from "components/MDButton";
+import { getImageUrl } from "utils/imageUrl";
 
 import backgroundImage from "assets/images/bg-profile.jpeg";
 import { useNavigate } from "react-router-dom";
@@ -142,11 +143,12 @@ function UserHeader({
           <Grid item>
             <MDBox position="relative" display="inline-block">
               <MDAvatar
-                src={user?.profileImageUrl || "https://via.placeholder.com/150"}
+                src={getImageUrl(user?.profileImageUrl) || "https://via.placeholder.com/150"}
                 alt="profile-image"
                 size="xl"
                 shadow="sm"
               />
+
               {showImageEditButton && (
                 <MDBox position="absolute" bottom={-10} right={-10} transform="translate(30%, 30%)">
                   <IconButton

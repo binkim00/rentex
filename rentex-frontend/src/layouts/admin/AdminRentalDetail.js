@@ -13,6 +13,7 @@ import TimelineDot from "@mui/lab/TimelineDot";
 import DashboardLayout from "examples/LayoutContainers/DashboardLayout";
 import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import Footer from "layouts/authentication/components/Footer";
+import { getImageUrl } from "utils/imageUrl";
 
 import Card from "@mui/material/Card";
 import Grid from "@mui/material/Grid";
@@ -94,13 +95,7 @@ function AdminRentalDetail() {
                 <Grid item xs={12} md={4}>
                   <CardMedia
                     component="img"
-                    image={
-                      rental.thumbnailUrl
-                        ? rental.thumbnailUrl.startsWith("http")
-                          ? rental.thumbnailUrl
-                          : `${process.env.REACT_APP_API_BASE}${rental.thumbnailUrl}`
-                        : "/no-image.png"
-                    }
+                    image={getImageUrl(rental.thumbnailUrl)}
                     alt={rental.itemName}
                     sx={{
                       width: "100%",

@@ -10,6 +10,7 @@ import Skeleton from "@mui/material/Skeleton";
 import Alert from "@mui/material/Alert";
 import CardMedia from "@mui/material/CardMedia";
 
+import { getImageUrl } from "utils/imageUrl";
 import MDBox from "components/MDBox";
 import MDTypography from "components/MDTypography";
 import MDButton from "components/MDButton";
@@ -340,7 +341,7 @@ function MyPageHome() {
                           <Card>
                             <MDBox position="relative">
                               <CardMedia
-                                image={it.thumbnailUrl || "/images/no-image.png"}
+                                image={getImageUrl(it.thumbnailUrl) || "/images/no-image.png"}
                                 alt={it.name}
                                 component="img"
                                 style={{ height: 140, objectFit: "cover", cursor: "pointer" }}

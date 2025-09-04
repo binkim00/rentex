@@ -341,33 +341,33 @@ INSERT IGNORE INTO notice_comment (id, notice_id, author_id, comment, created_at
 
 
 /* 상세 설명 (긴 텍스트) 채우기 */
-UPDATE item
-SET detail_description = CONCAT(
-        name, ' — 렌탈용 상세 안내\n\n',
-        '• 핵심 특징: 안정적인 성능, 직관적인 조작성, 현장 대응력을 갖춘 장비입니다. ',
-        '사진/영상/행사 기록 등 다양한 목적에 활용 가능하며 초보자도 쉽게 운용할 수 있습니다. ',
-        '장시간 사용 시 발열 관리를 위해 환기와 휴지 시간을 권장합니다.\n',
-        '• 기본 구성: 본체, 배터리 2개, 충전 케이블(또는 충전기), 휴대용 파우치(모델에 따라 다를 수 있음).\n',
-        '• 권장 용도: 브이로그/인터뷰/제품 촬영/행사 기록/유튜브 콘텐츠 제작 등.\n',
-        '• 사용 팁: 전원 투입 전 저장매체(메모리/카드/SSD) 잔여 용량 확인, 펌웨어 버전 확인, ',
-        '촬영 모드(해상도·프레임/노출/화이트밸런스) 사전 프리셋 저장 권장.\n',
-        '• 주의 사항: 방진·방습 환경이 아닌 곳에서의 물기/먼지 유입 주의, ',
-        '강한 충격/자외선/고온 보관 금지, 반납 전 저장매체 포맷 금지(데이터 백업 후 반납 권장).\n',
-        '• 호환성: 브랜드·마운트·전원 규격이 상이할 수 있으니, 기존 보유 액세서리와의 호환 여부를 사전 확인해 주세요.\n\n',
-        '※ 상세 스펙 및 구성은 모델·출고 시기에 따라 일부 다를 수 있습니다. 필요한 경우 사전 문의 바랍니다.'
-                         )
-WHERE (detail_description IS NULL OR detail_description = '');
+-- UPDATE item
+-- SET detail_description = CONCAT(
+--         name, ' — 렌탈용 상세 안내\n\n',
+--         '• 핵심 특징: 안정적인 성능, 직관적인 조작성, 현장 대응력을 갖춘 장비입니다. ',
+--         '사진/영상/행사 기록 등 다양한 목적에 활용 가능하며 초보자도 쉽게 운용할 수 있습니다. ',
+--         '장시간 사용 시 발열 관리를 위해 환기와 휴지 시간을 권장합니다.\n',
+--         '• 기본 구성: 본체, 배터리 2개, 충전 케이블(또는 충전기), 휴대용 파우치(모델에 따라 다를 수 있음).\n',
+--         '• 권장 용도: 브이로그/인터뷰/제품 촬영/행사 기록/유튜브 콘텐츠 제작 등.\n',
+--         '• 사용 팁: 전원 투입 전 저장매체(메모리/카드/SSD) 잔여 용량 확인, 펌웨어 버전 확인, ',
+--         '촬영 모드(해상도·프레임/노출/화이트밸런스) 사전 프리셋 저장 권장.\n',
+--         '• 주의 사항: 방진·방습 환경이 아닌 곳에서의 물기/먼지 유입 주의, ',
+--         '강한 충격/자외선/고온 보관 금지, 반납 전 저장매체 포맷 금지(데이터 백업 후 반납 권장).\n',
+--         '• 호환성: 브랜드·마운트·전원 규격이 상이할 수 있으니, 기존 보유 액세서리와의 호환 여부를 사전 확인해 주세요.\n\n',
+--         '※ 상세 스펙 및 구성은 모델·출고 시기에 따라 일부 다를 수 있습니다. 필요한 경우 사전 문의 바랍니다.'
+--                          )
+-- WHERE (detail_description IS NULL OR detail_description = '');
 
 /* 1) 상세 이미지가 없는 아이템에만 기본 이미지 1장 추가 */
-INSERT INTO item_detail_images (item_id, image_url)
-SELECT i.id, '/uploads/detailimage.png'
-FROM item i
-         LEFT JOIN item_detail_images di ON i.id = di.item_id
-WHERE di.item_id IS NULL;
+-- INSERT INTO item_detail_images (item_id, image_url)
+-- SELECT i.id, '/uploads/detailimage.png'
+-- FROM item i
+--          LEFT JOIN item_detail_images di ON i.id = di.item_id
+-- WHERE di.item_id IS NULL;
 
 /* 2) URL 경로 정리 (localhost 제거 → 상대경로만 유지) */
-UPDATE item_detail_images
-SET image_url = REPLACE(image_url, 'http://localhost:8080', '');
+-- UPDATE item_detail_images
+-- SET image_url = REPLACE(image_url, 'http://localhost:8080', '');
 
 -- 서버실행 후
 -- UPDATE item

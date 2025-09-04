@@ -8,6 +8,7 @@ import DashboardNavbar from "examples/Navbars/DashboardNavbar";
 import PageHeader from "layouts/dashboard/header/PageHeader";
 import MDTypography from "components/MDTypography";
 import FavoriteButton from "components/FavoriteButton";
+import { getImageUrl } from "utils/imageUrl";
 
 const fmt = new Intl.NumberFormat("ko-KR");
 
@@ -49,7 +50,7 @@ export default function MyFavorites() {
                     <CardMedia
                       component={Link}
                       to={`/items/${it.id}`}
-                      image={it.thumbnailUrl || "/images/no-image.png"}
+                      image={getImageUrl(it.thumbnailUrl) || "/images/no-image.png"}
                       alt={it.name}
                       sx={{ height: 180 }}
                     />

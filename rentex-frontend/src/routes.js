@@ -7,9 +7,6 @@ import Dashboard from "layouts/dashboard";
 // 공용
 import PublicItems from "layouts/rentals/publicItems";
 import PublicItemDetail from "layouts/rentals/publicItemDetail";
-import Billing from "layouts/billing";
-import RTL from "layouts/rtl";
-import Profile from "layouts/profile";
 import SignIn from "layouts/authentication/sign-in";
 import SignUp from "layouts/authentication/sign-up";
 import NoticeList from "layouts/notice/NoticeList";
@@ -29,7 +26,6 @@ import Privacy from "layouts/guide/Privacy";
 import Policy from "layouts/guide/Policy";
 
 // 유저
-import UserDashboard from "layouts/user";
 import MyPageHome from "layouts/user/MyPageHome";
 import EditProfile from "layouts/user/EditProfile";
 import RentalPay from "layouts/user/RentalPay";
@@ -42,7 +38,6 @@ import PaymentHistory from "layouts/user/PaymentHistory";
 import PaymentDetail from "layouts/user/PaymentDetail";
 import UserGuide from "layouts/user/UserGuide";
 import MyFavorites from "layouts/user/MyFavorites";
-import FavoriteButton from "components/FavoriteButton";
 
 // 파트너
 import PartnerDashboard from "layouts/partner";
@@ -64,7 +59,6 @@ import AdminStatistics from "layouts/admin/Statistics";
 import AdminUsers from "layouts/admin/Users";
 import AdminPenaltyDetail from "layouts/admin/PenaltyDetail";
 import PartnerStatisticsDetail from "layouts/admin/PartnerStatisticsDetail";
-import StatementPdfPage from "layouts/admin/StatementPdf";
 import UserDetail from "layouts/admin/UserDetail";
 import PartnerDetail from "layouts/admin/PartnerDetail";
 import AdminRentalManage from "layouts/admin/AdminRentalManage";

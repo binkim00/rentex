@@ -104,9 +104,11 @@ function RentalDetail() {
                     image={
                       rental.thumbnailUrl
                         ? rental.thumbnailUrl.startsWith("http")
-                          ? rental.thumbnailUrl
-                          : `${process.env.REACT_APP_API_BASE}${rental.thumbnailUrl}`
-                        : "/no-image.png"
+                          ? rental.thumbnailUrl // 절대 URL (S3 등) 그대로 사용
+                          : `${process.env.REACT_APP_API_BASE}${
+                              rental.thumbnailUrl.startsWith("/") ? "" : "/"
+                            }${rental.thumbnailUrl}` // API_BASE 붙임
+                        : `${process.env.PUBLIC_URL}/no-image.png` // public 폴더에 no-image.png 두고 참조
                     }
                     alt={rental.itemName}
                     sx={{
