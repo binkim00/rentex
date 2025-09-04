@@ -17,6 +17,9 @@ import PageHeader from "layouts/dashboard/header/PageHeader";
 import { useCategories } from "components/Hooks/useCategories";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
 
+// ★ 표시용 URL 정규화 유틸
+import { getImageUrl } from "utils/imageUrl";
+
 function PartnerItemDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -31,36 +34,47 @@ function PartnerItemDetail() {
     description: "",
     detailDescription: "",
     status: "AVAILABLE",
-    detailImages: [],
     partnerId: null,
   });
 
-  const [thumbnail, setThumbnail] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
-  const [detailImageFiles, setDetailImageFiles] = useState([]);
+  // ★ 기존에 서버가 준 상세 이미지 URL들(원본 그대로 보관)
+  const [existingDetailUrls, setExistingDetailUrls] = useState([]);
+  // ★ 사용자가 이번 편집에서 추가한 새 파일들만 분리
+  const [newDetailFiles, setNewDetailFiles] = useState([]);
 
+  // 썸네일
+  const [thumbnail, setThumbnail] = useState(null); // 새로 업로드한 썸네일 파일
+  const [previewUrl, setPreviewUrl] = useState(null); // 화면 표시용 썸네일 URL
+
+  // 조회
   useEffect(() => {
     api
       .get(`/partner/items/${id}`)
       .then((res) => {
-        const data = res.data;
+        const d = res.data || {};
         setForm({
-          name: data.name || "",
-          categoryId: data.categoryId || "",
-          subCategoryId: data.subCategoryId || "",
-          dailyPrice: data.dailyPrice || 0,
-          stockQuantity: data.stockQuantity || 0,
-          description: data.description || "",
-          detailDescription: data.detailDescription || "",
-          status: data.status || "AVAILABLE",
-          detailImages: data.detailImages || [],
-          partnerId: data.partnerId || null,
+          name: d.name || "",
+          categoryId: d.categoryId || "",
+          subCategoryId: d.subCategoryId || "",
+          dailyPrice: d.dailyPrice || 0,
+          stockQuantity: d.stockQuantity || 0,
+          description: d.description || "",
+          detailDescription: d.detailDescription || "",
+          status: d.status || "AVAILABLE",
+          partnerId: d.partnerId || null,
         });
-        setPreviewUrl(data.thumbnailUrl || null);
+
+        // ★ 썸네일은 표시용으로만 getImageUrl 적용
+        setPreviewUrl(d.thumbnailUrl ? getImageUrl(d.thumbnailUrl) : null);
+
+        // ★ 상세이미지: 서버 원본 문자열 배열을 그대로 보관 (전송 시 사용)
+        setExistingDetailUrls(Array.isArray(d.detailImages) ? d.detailImages : []);
+        setNewDetailFiles([]); // 새 파일 초기화
       })
       .catch(() => alert("장비 상세 정보를 불러오는데 실패했습니다."));
   }, [id]);
 
+  // 소분류 로딩
   useEffect(() => {
     if (!form.categoryId) return setForm((prev) => ({ ...prev, subCategoryId: "" }));
     fetchSubCategories(form.categoryId);
@@ -74,60 +88,54 @@ function PartnerItemDetail() {
     }));
   };
 
+  // 썸네일 업로드
   const handleThumbnailChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
-      setThumbnail(file);
-      setPreviewUrl(URL.createObjectURL(file));
+      setThumbnail(file); // 전송용
+      setPreviewUrl(URL.createObjectURL(file)); // 표시용
     }
   };
 
+  // 상세 이미지 추가
   const handleDetailImagesChange = (e) => {
-    const files = Array.from(e.target.files);
-    if (form.detailImages.length + files.length > 5) {
+    const files = Array.from(e.target.files || []);
+    const total = existingDetailUrls.length + newDetailFiles.length + files.length;
+    if (total > 5) {
       alert("상세 이미지는 최대 5개까지 업로드 가능합니다.");
       return;
     }
-    setDetailImageFiles((prev) => [...prev, ...files]);
-    setForm((prev) => ({ ...prev, detailImages: [...prev.detailImages, ...files] }));
+    setNewDetailFiles((prev) => [...prev, ...files]);
   };
 
+  // 상세 이미지 제거(인덱스는 "표시 순서" 기준: 기존 URL들 먼저, 그 다음 새 파일들)
   const removeDetailImage = (idx) => {
-    const newform = form;
-    newform.detailImages = newform.detailImages.filter((_, i) => i !== idx);
-    setForm({ ...newform });
-    setDetailImageFiles((prev) => prev.filter((_, i) => i !== idx));
+    const existingCount = existingDetailUrls.length;
+    if (idx < existingCount) {
+      // 기존 URL 제거
+      setExistingDetailUrls((prev) => prev.filter((_, i) => i !== idx));
+    } else {
+      // 새 파일 제거
+      const fileIdx = idx - existingCount;
+      setNewDetailFiles((prev) => prev.filter((_, i) => i !== fileIdx));
+    }
   };
 
+  // 전송 페이로드 구성
   const buildFormData = () => {
-    // form.detailImages -> 기존 이미지 URL 배열
-    // detailImageFiles -> 새로 선택한 파일 배열
+    // 서버로 보낼 DTO(JSON)에는 "삭제하지 않은 기존 이미지 URL"만 담아 보냄
+    const dto = {
+      ...form,
+      detailImages: existingDetailUrls, // ★ 서버 원본 문자열 그대로 사용
+    };
 
-    // detailImages 배열은 JSON에서 제거 (파일+URL 섞이면 안 됨)
-    const { detailImages, ...formToSend } = form;
+    const fd = new FormData();
+    fd.append("item", new Blob([JSON.stringify(dto)], { type: "application/json" }));
 
-    // ✅ dto.detailImages는 "삭제 안 한 기존 이미지 URL"만 담아 보내기
-    const formData = new FormData();
-    // DTO를 JSON으로 보내기
-    formData.append(
-      "item",
-      new Blob(
-        [
-          JSON.stringify({
-            ...formToSend,
-            detailImages: form.detailImages.filter((img) => typeof img === "string"),
-          }),
-        ],
-        { type: "application/json" },
-      ),
-    );
+    if (thumbnail) fd.append("thumbnail", thumbnail); // 썸네일(선택)
+    newDetailFiles.forEach((file) => fd.append("detailImages", file)); // 새 상세 이미지 파일들
 
-    if (thumbnail) formData.append("thumbnail", thumbnail);
-
-    // 새로 추가된 파일만 파일 배열에 들어있음
-    detailImageFiles.forEach((file) => formData.append("detailImages", file));
-
-    return formData;
+    return fd;
   };
 
   const handleSubmit = async (e) => {
@@ -143,6 +151,12 @@ function PartnerItemDetail() {
       alert("수정 실패!");
     }
   };
+
+  // ★ 화면 표시용 합성 배열: 기존(URL) → 새 파일 순
+  const displayImages = [
+    ...existingDetailUrls.map((raw) => ({ kind: "url", src: getImageUrl(raw) })),
+    ...newDetailFiles.map((file) => ({ kind: "file", src: URL.createObjectURL(file) })),
+  ];
 
   return (
     <DashboardLayout>
@@ -309,7 +323,7 @@ function PartnerItemDetail() {
                 </MDBox>
               </Grid>
 
-              {/* 전체 너비: 설명 */}
+              {/* 설명 */}
               <Grid item xs={12}>
                 <MDInput
                   label="설명"
@@ -322,7 +336,7 @@ function PartnerItemDetail() {
                 />
               </Grid>
 
-              {/* 전체 너비: 상세 설명 */}
+              {/* 상세 설명 */}
               <Grid item xs={12}>
                 <MDInput
                   label="상세 설명"
@@ -335,13 +349,15 @@ function PartnerItemDetail() {
                 />
               </Grid>
 
-              {/* 전체 너비: 상세 이미지 */}
+              {/* 상세 이미지 */}
               <Grid item xs={12}>
                 <MDTypography variant="h6" mb={1}>
                   상세 이미지 (최대 5개)
                 </MDTypography>
+
                 <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginTop: 10 }}>
-                  {Array.from({ length: 5 }).map((_, idx) => (
+                  {/* 표시 순서: 기존 URL → 새 파일 */}
+                  {displayImages.map((img, idx) => (
                     <div
                       key={idx}
                       style={{
@@ -355,59 +371,59 @@ function PartnerItemDetail() {
                         position: "relative",
                         overflow: "hidden",
                         background: "#fafafa",
-                        cursor: form.detailImages[idx] ? "default" : "pointer",
-                        transition: "border-color 0.2s, background 0.2s",
-                      }}
-                      onClick={() => {
-                        if (!form.detailImages[idx])
-                          document.getElementById("detail-upload").click();
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!form.detailImages[idx]) e.currentTarget.style.borderColor = "#3b90ff";
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!form.detailImages[idx]) e.currentTarget.style.borderColor = "#ccc";
                       }}
                     >
-                      {form.detailImages[idx] ? (
-                        <>
-                          <img
-                            src={
-                              typeof form.detailImages[idx] === "string"
-                                ? form.detailImages[idx]
-                                : URL.createObjectURL(form.detailImages[idx])
-                            }
-                            alt={`상세-${idx}`}
-                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                          />
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              removeDetailImage(idx);
-                            }}
-                            style={{
-                              position: "absolute",
-                              top: -5,
-                              right: -5,
-                              background: "red",
-                              color: "#fff",
-                              border: "none",
-                              borderRadius: "50%",
-                              width: 20,
-                              height: 20,
-                              cursor: "pointer",
-                            }}
-                          >
-                            ×
-                          </button>
-                        </>
-                      ) : (
-                        <span style={{ color: "#aaa", fontSize: 24 }}>+</span>
-                      )}
+                      <img
+                        src={img.src}
+                        alt={`상세-${idx}`}
+                        style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                        onError={(e) => (e.currentTarget.style.opacity = 0.2)}
+                      />
+
+                      <button
+                        type="button"
+                        onClick={() => removeDetailImage(idx)}
+                        style={{
+                          position: "absolute",
+                          top: -5,
+                          right: -5,
+                          background: "red",
+                          color: "#fff",
+                          border: "none",
+                          borderRadius: "50%",
+                          width: 20,
+                          height: 20,
+                          cursor: "pointer",
+                        }}
+                        title="삭제"
+                      >
+                        ×
+                      </button>
                     </div>
                   ))}
+
+                  {/* 업로드 슬롯 */}
+                  {displayImages.length < 5 && (
+                    <div
+                      onClick={() => document.getElementById("detail-upload").click()}
+                      style={{
+                        width: 120,
+                        height: 120,
+                        border: "2px dashed #ccc",
+                        borderRadius: 8,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        overflow: "hidden",
+                        background: "#fafafa",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <span style={{ color: "#aaa", fontSize: 24 }}>+</span>
+                    </div>
+                  )}
                 </div>
+
                 <input
                   id="detail-upload"
                   type="file"

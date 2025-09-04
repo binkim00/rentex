@@ -16,6 +16,7 @@ import MDButton from "components/MDButton";
 import PageHeader from "layouts/dashboard/header/PageHeader";
 import { useCategories } from "components/Hooks/useCategories";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
+import { getImageUrl } from "utils/imageUrl";
 
 function ItemDetailView() {
   const { id } = useParams();
@@ -55,7 +56,7 @@ function ItemDetailView() {
           detailImages: data.detailImages || [],
           partnerId: data.partnerId || null,
         });
-        setPreviewUrl(data.thumbnailUrl || null);
+        setPreviewUrl(getImageUrl(data.thumbnailUrl) || null);
       })
       .catch(() => alert("장비 상세 정보를 불러오는데 실패했습니다."));
   }, [id]);
@@ -89,7 +90,7 @@ function ItemDetailView() {
                   borderRadius: 8,
                   cursor: "pointer",
                 }}
-                onClick={() => window.open(previewUrl, "_blank")}
+                onClick={() => previewUrl && window.open(previewUrl, "_blank")}
               />
             </Grid>
 
@@ -178,7 +179,7 @@ function ItemDetailView() {
                 {form.detailImages.map((img, idx) => (
                   <img
                     key={idx}
-                    src={typeof img === "string" ? img : URL.createObjectURL(img)}
+                    src={typeof img === "string" ? getImageUrl(img) : URL.createObjectURL(img)}
                     alt={`상세-${idx}`}
                     style={{ width: 120, height: 120, objectFit: "cover", borderRadius: 8 }}
                   />
